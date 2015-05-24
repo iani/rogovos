@@ -1,3 +1,5 @@
+
+
 Rogovos {
 	classvar <samplePath = "/Users/iani/Music/sounds/150524Rogovos/";
 	classvar <rog, <airvik, <birdvik;
@@ -5,6 +7,17 @@ Rogovos {
 	*initClass {
 		StartUp add: {
 			Server.default doWhenBooted: {
+				// Rerouting to jump over disconnected MOTU outputs
+				// This is Andre Bartetzki's fix, because setting
+				// outpuStreamsEnabled makes the Server unable to boot.
+				SynthDef("reroute", {
+					var sig;
+					sig = In.ar(0, 23);
+					ReplaceOut.ar(2, sig[0..7]);
+					ReplaceOut.ar(14, sig[8..15]);
+					ReplaceOut.ar(22, sig[16..23]);
+				
+				}).play(Server.default, nil, \addAfter);
 				"Loading samples for Rogovos".postln;
 				rog = this.loadBuf("rog");
 				airvik = this.loadBuf("airvik");
@@ -12,7 +25,10 @@ Rogovos {
 				// { [rog, airvik, birdvik] do: _.updateInfo; } defer: 3;
 				{ [rog, airvik, birdvik] do: _.postln; } defer: 3.5;
 			};
-			Server.default.options.numOutputBusChannels = 14;
+			Server.default.options.numOutputBusChannels = 30;
+			// Server does not boot with outputStreamsEnabled set!
+			// MOTU driver <-> SC problem?
+			//Server.default.options.outputStreamsEnabled = "010011";
 			if (Server.default.serverRunning.not) { Server.default.boot };
 		}
 	}
@@ -30,7 +46,7 @@ Rogovos {
 			buf,
 			BufRateScale.ir (buf) * \rate.kr (rate),
 			\trigger.kr (1),
-			\startPos.kr (startPos),
+			\startPos.kr (startPos) * 44100,
 			\loop.kr (loop),
 			doneAction: 2
 		)
