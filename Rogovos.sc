@@ -3,6 +3,7 @@
 Rogovos {
 	classvar <samplePath = "/Users/iani/Music/sounds/150524Rogovos/";
 	classvar <rog, <airvik, <birdvik;
+	classvar <rerouteSynth;
 	
 	*initClass {
 		StartUp add: {
@@ -10,14 +11,7 @@ Rogovos {
 				// Rerouting to jump over disconnected MOTU outputs
 				// This is Andre Bartetzki's fix, because setting
 				// outpuStreamsEnabled makes the Server unable to boot.
-				SynthDef("reroute", {
-					var sig;
-					sig = In.ar(0, 23);
-					ReplaceOut.ar(2, sig[0..7]);
-					ReplaceOut.ar(14, sig[8..15]);
-					ReplaceOut.ar(22, sig[16..23]);
-				
-				}).play(Server.default, nil, \addAfter);
+				this.startReroute;
 				"Loading samples for Rogovos".postln;
 				rog = this.loadBuf("rog");
 				airvik = this.loadBuf("airvik");
@@ -33,6 +27,36 @@ Rogovos {
 		}
 	}
 
+
+	*startReroute {
+		if (rerouteSynth.isNil) {
+			rerouteSynth = SynthDef("reroute", {
+				var sig;
+				sig = In.ar(0, 24);
+				ReplaceOut.ar(2, sig[0..7]);
+				ReplaceOut.ar(14, sig[8..15]);
+				ReplaceOut.ar(22, sig[16..23]);
+			}).play(Server.default, nil, \addAfter);
+			rerouteSynth.onEnd (this, {
+				rerouteSynth = nil;
+				"Reroute synth was stopped".postln;
+			});
+			"Reroute started".postln;
+		}{
+			"Reroute synth still running. Try Rogovos.stopReroute".postln;
+		}
+	}
+
+	*stopReroute {
+		if (rerouteSynth.isNil) {
+			"No reroute synth is running. Doing nothing".postln;
+		}{
+			rerouteSynth.free;
+			rerouteSynth = nil;
+			"Stopped rerouting".postln;
+		};
+	}
+	
 	*loadBuf { | sampname |
 		(samplePath ++ sampname ++ ".wav").postln;
 		^Buffer.read(Server.default, samplePath ++ sampname ++ ".wav");

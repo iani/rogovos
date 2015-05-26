@@ -49,7 +49,7 @@ Server.killAll;
 		8,
 		Rogovos.playBuf(\rog),
 	    LFSaw.kr(0.1)
-	) * 10
+	) * 4
 } => \r1;
 
 //:
@@ -59,9 +59,9 @@ Server.killAll;
 			8,
 			Rogovos.playBuf(\rog),
 			LFSaw.kr(0.1)
-		) * 10
+		) * 4
 	)
-} => \r1;
+} => \r2;
 
 //:
 {
@@ -70,9 +70,9 @@ Server.killAll;
 			8,
 			Rogovos.playBuf(\rog),
 			LFSaw.kr(0.1)
-		) * 10
+		) * 4
 	)
-} => \r1;
+} => \r3;
 
 //:
 {
@@ -90,7 +90,7 @@ Server.killAll;
 {
 	PanAz.ar (
 		14,
-		Rogovos.playBuf(\rog, startPos: 200000),
+		Rogovos.playBuf(\airvik, startPos: 200000),
 	    4
 	)
 } => \r1;
@@ -99,7 +99,7 @@ Server.killAll;
 {
 	PanAz.ar (
 		14,
-		Rogovos.playBuf(\rog),
+		Rogovos.playBuf(\birdvik),
 
 	)
 } => \r1;
@@ -119,3 +119,11 @@ Server.killAll;
 	)
 } => \r1;
 
+//:
+
+\r1.free;
+\r2.free;
+\r3.free;
+//:
+
+{ Out.ar(23, WhiteNoise.ar(0.01))}.play;
