@@ -1,3 +1,5 @@
+//:
+ServerMeter(Server.default);
 //: ================ EXTRAS ================
 Help.gui;
 //: ================ SOURCE + FX SETUP ================
@@ -13,23 +15,26 @@ Help.gui;
 \r1f2.toTail;
 \r1f2.fadeTime = 3;
 //:
-
+Rogovos.rerouteSynth.set(\msterAmp, 0.07);
 //: START FIRST SOURCE, and immediately basic output;
 { Rogovos.playBuf(\rog) } => \r1;
-{ In.ar(\r1.abus) } => \r1f;
+// { Out.ar(24, In.ar(\r1.abus)) } => \r1f;
 
-\r1.set(\rate, 14, \amp, 0.02);
+\r1.set(\amp, 0.2);
 
 //: Now start panning;
-{ PanAz.ar(8, In.ar(\r1.abus), \pos.kr(0)) } => \r1f;
+{ Out.kr(24, PanAz.ar(8, In.ar(\r1.abus), \pos.kr(0))) * 0.5 } => \r1f;
 //:
-{ PanAz.ar(8, In.ar(\r1.abus) * 0.3,
-	LFSaw.kr(30.reciprocal))
+{
+	Out.ar(24,
+		PanAz.ar(8, In.ar(\r1.abus) * 0.3,
+			LFSaw.kr(30.reciprocal)
+	))
 } => \r1f;
 
 //: Now slowly slow the rate down
 {
-	(20..120) / 100 do: { | i |
+	(12..120) / 100 do: { | i |
 		\r1.set(\rate, i);
 		0.5.wait;
 	};
@@ -45,8 +50,21 @@ Help.gui;
 	fft = FFT(lbuf, src);
 	feature = Amplitude.kr(src, 0.1, 0.5);
 	resynth = BrownNoise.ar(Lag.kr (feature, 0.4));
+	pan = PanAz.ar(8, resynth, LFSaw.kr(0.2), \width.kr(2));
+	Out.ar(24, pan * 0.2);
+} => \r1f2;
+
+//:
+{
+	var lbuf, src, feature, fft, resynth, pan;
+	lbuf = LocalBuf(1024, 1);
+	src = In.ar(\r1.abus);
+	fft = FFT(lbuf, src);
+	feature = Amplitude.kr(src, 0.1, 0.5);
+	resynth = Ringz.ar(BrownNoise.ar(Lag.kr (feature, 0.4)),
+		LFNoise1.kr(0.2).range(100, 2000), 0.1) * 0.1;
 	pan = PanAz.ar(8, resynth, \pos.kr(0), \width.kr(2));
-	Out.ar(0, pan * 0.2);
+	Out.ar(24, pan * 0.5);
 } => \r1f2;
 
 //:
@@ -58,7 +76,7 @@ Help.gui;
 	feature = Amplitude.kr(src, 0.1, 0.5);
 	resynth = Ringz.ar(BrownNoise.ar(Lag.kr (feature, 0.4)), 1000, 0.1) * 0.1;
 	pan = PanAz.ar(8, resynth, \pos.kr(0), \width.kr(2));
-	Out.ar(0, pan);
+	Out.ar(24, pan * 0.5);
 } => \r1f2;
 
 //:
@@ -72,25 +90,9 @@ Help.gui;
 	resynth = Ringz.ar(BrownNoise.ar(Lag.kr (feature, 0.4)),
 		LFDNoise1.kr(10).range(500, 800), 0.1) * 0.1;
 	pan = PanAz.ar(8, resynth, \pos.kr(0), \width.kr(2));
-	Out.ar(0, pan);
+	Out.ar(24, pan * 0.25);
 } => \r1f2;
- => \r1f2;
 
-//:
-{
-	var lbuf, src, feature, fft, resynth, pan;
-	var centroid;
-	lbuf = LocalBuf(1024, 1);
-	src = In.ar(\r1.abus);
-	fft = FFT(lbuf, src);
-	feature = Amplitude.kr(src, 0.1, 0.5);
-	centroid = SpecCentroid.kr(fft);
-	resynth = Ringz.ar(
-		BrownNoise.ar(Lag.kr (feature, 0.4)),
-		centroid, 0.1) * 0.1;
-	pan = PanAz.ar(8, resynth, \pos.kr(0), \width.kr(2));
-	Out.ar(0, pan);
-} => \r1f2;
 
 //:
 {
@@ -105,7 +107,7 @@ Help.gui;
 		BrownNoise.ar(Lag.kr (feature, 0.4)),
 		Lag.kr(centroid, 1), 0.1) * 0.1;
 	pan = PanAz.ar(8, resynth, \pos.kr(5), \width.kr(2));
-	Out.ar(0, pan);
+	Out.ar(24, pan * 0.4);
 } => \r1f2;
 
 //:
@@ -121,22 +123,10 @@ Help.gui;
 		BrownNoise.ar(Lag.kr (feature, 0.4)),
 		Lag.kr(centroid / 10, 1), 0.1) * 0.1;
 	pan = PanAz.ar(8, resynth, \pos.kr(0), \width.kr(2));
-	Out.ar(0, pan * 0.001);
+	Out.ar(24, pan * 0.01);
 } => \r1f2;
 
-//:
-{
-	var lbuf, src, feature, fft, resynth, pan;
-	lbuf = LocalBuf(1024, 1);
-	src = In.ar(\r1.abus);
-	fft = FFT(lbuf, src);
-	// feature = FFTPower.kr(fft);
-	// feature = FFTSlope.kr(fft);
-	feature = SpecCentroid.kr(fft);
-	resynth = PinkNoise.ar(feature / 100);
-	pan = PanAz.ar(8, resynth, \pos.kr(0), \width.kr(2));
-	Out.ar(0, pan);
-} => \r1f2;
+
 
 //:
 {
@@ -147,7 +137,7 @@ Help.gui;
 	feature = Amplitude.kr(src, 0.1, 1);
 	resynth = WhiteNoise.ar(feature);
 	pan = PanAz.ar(8, resynth, \pos.kr(0), \width.kr(2));
-	Out.ar(0, pan);
+	Out.ar(24, pan);
 } => \r1f2;
 
 //:
@@ -158,7 +148,7 @@ Help.gui;
 	fft = FFT(lbuf, src);
 	feature = Amplitude.kr(src, 0.1, 1);
 	resynth = PinkNoise.ar(feature);
-	Out.ar(0, resynth);
+	Out.ar(24, resynth);
 } => \r1f2;
 
 //:
@@ -169,20 +159,11 @@ Help.gui;
 	fft = FFT(lbuf, src);
 	feature = Amplitude.kr(src, 0.1, 1);
 	resynth = PinkNoise.ar(feature);
-	Out.ar(0, resynth);
+	Out.ar(24, resynth);
 } => \r1f2;
 
 //:
-{
-	var lbuf, src, feature, fft, resynth;
-	lbuf = LocalBuf(1024, 1);
-	src = In.ar(\r1.abus);
-	fft = FFT(lbuf, src);
-	feature = 
-	resynth  = PinkNoise.ar();
-	Out.ar(0, [src, resynth]);
-} => \r1f2;
-
+\r1f2.free;
 //:
 \r1.set(\rate, 0.3);
 //:

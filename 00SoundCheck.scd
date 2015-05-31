@@ -1,14 +1,61 @@
 //:
 Server.default.queryAllNodes;
 //:
-
-Server.default.options.outputStreamsEnabled = "111111";
-Server.default.options.inputStreamsEnabled = "1111111";
-
+ServerMeter(Server.default);
 //:
 
-{ WhiteNoise.ar(0.1) }.play;
+~test = { | out = 2 | Out.ar(out, WhiteNoise.ar(0.01)) }.play;
+
 //:
+~test.set(\out, 1);
+//:
+~test.set(\out, 12);
+//:
+~test.set(\out, 13);
+//:
+~test.set(\out, 14);
+//:
+~test.set(\out, 15);
+//:
+~test.set(\out, 16);
+//:
+~test.set(\out, 17);
+//:
+~test.set(\out, 18);
+//:
+~test.set(\out, 19);
+//:
+~test.set(\out, 20);
+//:
+~test.set(\out, 22);
+//:
+~test.set(\out, 23);
+//:
+~test.set(\out, 21);
+//:
+~test.set(\out, 1);
+//:
+~test.set(\out, 15);
+
+//:
+~rate = 1;
+r = {
+	inf do: { | i |
+ 		~rate.wait;
+		~test.set(\out, i % 12 + 12);
+	};
+	
+}.fork;
+//:
+r.stop;
+~test.free;
+//:
+Rogovos.rerouteSynth.set(\masterAmp, 0.1);
+Rogovos.rerouteSynth.set(\wooferAmp, 12.1);
+//:
+ServerMeter(Server.default);
+//:
+
 Server.default.quit;
 
 //:

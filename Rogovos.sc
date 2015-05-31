@@ -11,6 +11,7 @@ Rogovos {
 				// Rerouting to jump over disconnected MOTU outputs
 				// This is Andre Bartetzki's fix, because setting
 				// outpuStreamsEnabled makes the Server unable to boot.
+				// Disabled for Corfu
 				this.startReroute;
 				"Loading samples for Rogovos".postln;
 				rog = this.loadBuf("rog");
@@ -19,10 +20,13 @@ Rogovos {
 				// { [rog, airvik, birdvik] do: _.updateInfo; } defer: 3;
 				{ [rog, airvik, birdvik] do: _.postln; } defer: 3.5;
 			};
-			Server.default.options.numOutputBusChannels = 30;
+			Server.default.options.numOutputBusChannels = 46;
+			// Server.default.options.outputStreamsEnabled = "100111";
+			// Server.default.options.inputStreamsEnabled = "111111";
+
 			// Server does not boot with outputStreamsEnabled set!
 			// MOTU driver <-> SC problem?
-			//Server.default.options.outputStreamsEnabled = "010011";
+			// Server.default.options.outputStreamsEnabled = "010011";
 			if (Server.default.serverRunning.not) { Server.default.boot };
 		}
 	}
@@ -30,12 +34,36 @@ Rogovos {
 
 	*startReroute {
 		if (rerouteSynth.isNil) {
-			rerouteSynth = SynthDef("reroute", {
+			rerouteSynth = SynthDef("reroute", { | wooferAmp = 1, masterAmp = 1 |
 				var sig;
-				sig = In.ar(0, 24);
-				ReplaceOut.ar(2, sig[0..7]);
-				ReplaceOut.ar(14, sig[8..15]);
-				ReplaceOut.ar(22, sig[16..23]);
+				// sig = In.ar(0, 11);
+				// ReplaceOut.ar(0, sig[0..7] * masterAmp);
+
+				// ReplaceOut.ar(12, sig[8..10] * masterAmp);
+				// ReplaceOut.ar(16, Mix(sig) * wooferAmp);
+				ReplaceOut.ar(0, masterAmp * In.ar(24 + 0));
+				ReplaceOut.ar(2, masterAmp * In.ar(24 + 1));
+				ReplaceOut.ar(1, masterAmp * In.ar(24 + 2));
+				ReplaceOut.ar(4, masterAmp * In.ar(24 + 3));
+				ReplaceOut.ar(7, masterAmp * In.ar(24 + 4));
+				ReplaceOut.ar(5, masterAmp * In.ar(24 + 5));
+				ReplaceOut.ar(6, masterAmp * In.ar(24 + 6));
+				ReplaceOut.ar(3, masterAmp * In.ar(24 + 7));
+				ReplaceOut.ar(12, masterAmp * In.ar(24 + 8));
+				ReplaceOut.ar(13, masterAmp * In.ar(24 + 9));
+				ReplaceOut.ar(14, masterAmp * In.ar(24 + 11));
+				ReplaceOut.ar(15, masterAmp * In.ar(24 + 10));
+
+
+
+				
+				ReplaceOut.ar(8, Silent.ar);
+				ReplaceOut.ar(9, Silent.ar);
+				ReplaceOut.ar(10, Silent.ar);
+				ReplaceOut.ar(11, Silent.ar);				
+
+				
+				// ReplaceOut.ar(22, sig[16..23]);
 			}).play(Server.default, nil, \addAfter);
 			rerouteSynth.onEnd (this, {
 				rerouteSynth = nil;
